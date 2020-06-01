@@ -232,4 +232,12 @@ module Middleware : sig
     -> ?send_preflight_response:bool
     -> unit
     -> Rock.Middleware.t
+
+  val static
+    :  read:(string -> Rock.Body.t option Lwt.t)
+    -> ?uri_prefix:string
+    -> ?headers:Httpaf.Headers.t
+    -> ?etag_of_fname:(string -> string)
+    -> unit
+    -> Rock.Middleware.t
 end
