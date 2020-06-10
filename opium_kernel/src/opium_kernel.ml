@@ -7,6 +7,8 @@ module Rock = Rock
 module Route = Route
 module Server_connection = Server_connection
 module Router = Router
+module Cookie = Cookie
+module Date = Date
 
 module Middleware = struct
   let router = Router.m
