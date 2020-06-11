@@ -43,33 +43,24 @@ let add_opt_header_unless_exists headers k v =
   | None -> Httpaf.Headers.of_list [ k, v ]
 ;;
 
-let respond_with_file ?headers ~name ~read () =
-  let* body = read name in
+let respond_with_file ?mime_type ?headers ~read name =
+  let* body = read () in
   match body with
   | None ->
     let headers = Option.value headers ~default:Httpaf.Headers.empty in
     let resp = Httpaf.Response.create ~headers `Not_found in
     Lwt.return (resp, Body.empty)
   | Some body ->
-    let mime_type = Magic_mime.lookup name in
+    let mime_type = mime_type |> Option.value ~default:(Magic_mime.lookup name) in
     let headers = add_opt_header_unless_exists headers "content-type" mime_type in
     let resp = Httpaf.Response.create ~headers `OK in
     Lwt.return (resp, body)
 ;;
 
-let public_serve
-    ~read
-    ~uri_prefix
-    ~requested
-    ~request_if_none_match
-    ?etag_of_fname
-    ?(headers = Httpaf.Headers.empty)
-    ()
-  =
-  let legal_path = chop_prefix requested ~prefix:uri_prefix in
+let _serve ~read ?mime_type ?etag_of_fname ?(headers = Httpaf.Headers.empty) fname req =
   let etag_quoted =
     match etag_of_fname with
-    | Some f -> Some (Printf.sprintf "%S" (f legal_path))
+    | Some f -> Some (Printf.sprintf "%S" (f fname))
     | None -> None
   in
   let headers =
@@ -77,6 +68,7 @@ let public_serve
     | Some etag_quoted -> Httpaf.Headers.add_unless_exists headers "etag" etag_quoted
     | None -> headers
   in
+  let request_if_none_match = Httpaf.Headers.get req.Request.headers "If-None-Match" in
   let request_matches_etag =
     match request_if_none_match, etag_quoted with
     | Some request_etags, Some etag_quoted ->
@@ -88,8 +80,15 @@ let public_serve
   if request_matches_etag
   then `Ok (Response.make ~status:`Not_modified ~headers ()) |> Lwt.return
   else
-    let+ resp, body = respond_with_file ~read ~headers ~name:legal_path () in
+    let+ resp, body = respond_with_file ~read ?mime_type ~headers fname in
     if resp.status = `Not_found then `Not_found else `Ok (Response.make ~body ())
+;;
+
+let serve ~read ?mime_type ?etag_of_fname ?headers fname req =
+  let* res = _serve ~read ?mime_type ?etag_of_fname ?headers fname req in
+  match res with
+  | `Not_found -> Lwt.return @@ Response.make ~status:`Not_found ()
+  | `Ok x -> Lwt.return x
 ;;
 
 let m ~read ?(uri_prefix = "/") ?headers ?etag_of_fname () =
@@ -99,19 +98,9 @@ let m ~read ?(uri_prefix = "/") ?headers ?etag_of_fname () =
       let local_path = req.Request.target in
       if local_path |> is_prefix ~prefix:uri_prefix
       then (
-        let request_if_none_match =
-          Httpaf.Headers.get req.Request.headers "If-None-Match"
-        in
-        let* res =
-          public_serve
-            ~read
-            ~uri_prefix
-            ~requested:local_path
-            ~request_if_none_match
-            ?etag_of_fname
-            ?headers
-            ()
-        in
+        let legal_path = chop_prefix local_path ~prefix:uri_prefix in
+        let read () = read legal_path in
+        let* res = _serve ~read ?etag_of_fname ?headers legal_path req in
         match res with
         | `Not_found -> handler req
         | `Ok x -> Lwt.return x)

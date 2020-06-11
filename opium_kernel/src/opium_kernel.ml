@@ -7,6 +7,7 @@ module Rock = Rock
 module Route = Route
 module Server_connection = Server_connection
 module Router = Router
+module Static = Static
 
 module Middleware = struct
   let router = Router.m

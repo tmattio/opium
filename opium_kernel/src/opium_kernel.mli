@@ -213,6 +213,24 @@ module Server_connection : sig
     -> 'a Lwt.t
 end
 
+module Static : sig
+  val serve
+    :  read:(unit -> Body.t option Lwt.t)
+    -> ?mime_type:string
+    -> ?etag_of_fname:(string -> string)
+    -> ?headers:Headers.t
+    -> string
+    -> Rock.Handler.t
+
+  val m
+    :  read:(string -> Body.t option Lwt.t)
+    -> ?uri_prefix:string
+    -> ?headers:Headers.t
+    -> ?etag_of_fname:(string -> string)
+    -> unit
+    -> Rock.Middleware.t
+end
+
 module Middleware : sig
   val router : Rock.Handler.t Router.t -> Rock.Middleware.t
   val debugger : unit -> Rock.Middleware.t
