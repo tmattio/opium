@@ -1,5 +1,7 @@
 (executables
  (libraries re yojson opium logs.fmt base64 sexplib0)
+ (modules
+  (:standard \ graphql))
  (preprocess
   (pps ppx_sexp_conv ppx_yojson_conv))
  (flags
@@ -9,9 +11,15 @@
    middleware_uppercase read_json_body sample static_serve_override
    just_kernel))
 
+(executable
+ (name graphql)
+ (modules graphql)
+ (libraries opium opium-graphql logs.fmt))
+
 (alias
  (name examples)
  (deps exit_hook_example.exe hello_world_basic.exe hello_world_html.exe
    hello_world.exe middleware_basic_auth.exe middleware_debugger.exe
    middleware_logger.exe middleware_ua.exe middleware_uppercase.exe
-   read_json_body.exe sample.exe static_serve_override.exe just_kernel.exe))
+   read_json_body.exe sample.exe static_serve_override.exe just_kernel.exe
+   graphql.exe))

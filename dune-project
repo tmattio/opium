@@ -6,6 +6,8 @@
 
 (generate_opam_files true)
 
+(allow_approximate_merlin)
+
 (source
  (github rgrinberg/opium))
 
@@ -63,5 +65,24 @@
   sexplib0
   re
   magic-mime
+  (alcotest :with-test)
+  (alcotest-lwt :with-test)))
+
+(package
+ (name opium-graphql)
+ (synopsis "Run GraphQL servers with `opium_kernel`")
+ (description
+   "This package allows you to execute Opium requests against GraphQL schemas built with `graphql`.")
+ (depends
+  (ocaml
+   (>= 4.08))
+  (dune
+   (>= 1.11))
+  (opium_kernel
+   (= :version))
+  (lwt
+   (>= 5.3.0))
+  graphql
+  graphql-lwt
   (alcotest :with-test)
   (alcotest-lwt :with-test)))

@@ -1,0 +1,6 @@
+(tests
+ (names request_test)
+ (libraries alcotest alcotest-lwt opium_kernel opium-graphql)
+ (package opium-graphql)
+ (action
+  (run %{test} -q --color=always)))
