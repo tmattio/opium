@@ -68,16 +68,19 @@ module Request = struct
   ;;
 
   let get_header t header = Headers.get t.headers header
-  let add_header t (k, v) = { t with headers = Headers.add t.headers k v }
+  let get_headers t header = Headers.get_multi t.headers header
 
-  let add_header_unless_exists t (k, v) =
-    { t with headers = Headers.add_unless_exists t.headers k v }
+  let get_cookie t cookie =
+    match get_header t "cookie" with
+    | None -> None
+    | Some value ->
+      Cookie.values_of_string value |> List.find_opt (fun (k, _) -> String.equal k cookie)
   ;;
 
-  let add_headers t hs = { t with headers = Headers.add_list t.headers hs }
-
-  let add_headers_unless_exists t hs =
-    { t with headers = Headers.add_list_unless_exists t.headers hs }
+  let get_cookies t =
+    match get_header t "cookie" with
+    | None -> []
+    | Some value -> Cookie.values_of_string value
   ;;
 
   let sexp_of_t t =
@@ -129,6 +132,7 @@ module Response = struct
   ;;
 
   let get_header t header = Headers.get t.headers header
+  let get_headers t header = Headers.get_multi t.headers header
   let add_header t (k, v) = { t with headers = Headers.add t.headers k v }
 
   let add_header_unless_exists t (k, v) =
@@ -139,6 +143,39 @@ module Response = struct
 
   let add_headers_unless_exists t hs =
     { t with headers = Headers.add_list_unless_exists t.headers hs }
+  ;;
+
+  let get_cookie t cookie =
+    let cookie_opt =
+      get_headers t "set-cookie"
+      |> ListLabels.map ~f:(fun v -> Cookie.of_set_cookie_header ("Set-Cookie", v))
+      |> ListLabels.find_opt ~f:(function
+             | Some Cookie.{ value = k, _; _ } when String.equal k cookie -> true
+             | _ -> false)
+    in
+    Option.bind cookie_opt (fun x -> x)
+  ;;
+
+  let get_cookies t =
+    get_headers t "set-cookie"
+    |> ListLabels.map ~f:(fun v -> Cookie.of_set_cookie_header ("Set-Cookie", v))
+    |> ListLabels.filter_map ~f:(fun x -> x)
+  ;;
+
+  let add_cookie ?expires ?scope ?same_site ?secure ?http_only t value =
+    let cookie_header =
+      Cookie.make ?expires ?scope ?same_site ?secure ?http_only value
+      |> Cookie.to_set_cookie_header
+    in
+    add_header t cookie_header
+  ;;
+
+  let add_cookie_unless_exists ?expires ?scope ?same_site ?secure ?http_only t (k, v) =
+    let cookies = get_cookies t in
+    if ListLabels.exists cookies ~f:(fun Cookie.{ value = cookie, _; _ } ->
+           String.equal cookie k)
+    then t
+    else add_cookie ?expires ?scope ?same_site ?secure ?http_only t (k, v)
   ;;
 
   let of_string'

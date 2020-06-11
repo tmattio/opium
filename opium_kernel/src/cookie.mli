@@ -5,7 +5,7 @@
   Copyright (c) 2020, Ulrik Strid
   All rights reserved. *)
 
-type header = Rock.Headers.name * Rock.Headers.value
+type header = Httpaf.Headers.name * Httpaf.Headers.value
 
 (** parses ["Cookie: foo=bar"] into [("Cookie", "foo=bar")] *)
 val header_of_string : string -> header option
@@ -58,3 +58,4 @@ val of_set_cookie_header : ?origin:string -> header -> t option
 val to_set_cookie_header : t -> header
 val to_cookie_header : ?now:Ptime.t -> ?elapsed:int64 -> ?scope:Uri.t -> t list -> header
 val cookies_of_header : header -> cookie list
+val values_of_string : string -> (string * string) list

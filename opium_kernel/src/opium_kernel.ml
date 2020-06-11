@@ -9,6 +9,7 @@ module Server_connection = Server_connection
 module Router = Router
 module Cookie = Cookie
 module Date = Date
+module Session = Opium_session
 
 module Middleware = struct
   let router = Router.m

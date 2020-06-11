@@ -40,6 +40,7 @@
   bigstringaf
   re
   uri
+  session
   (alcotest :with-test)))
 
 (package

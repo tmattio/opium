@@ -24,6 +24,7 @@ depends: [
   "bigstringaf"
   "re"
   "uri"
+  "session"
   "alcotest" {with-test}
 ]
 build: [

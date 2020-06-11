@@ -104,6 +104,10 @@ module Rock : sig
       -> unit
       -> t
 
+    val get_header : t -> string -> string option
+    val get_headers : t -> string -> string list
+    val get_cookie : t -> string -> (string * string) option
+    val get_cookies : t -> (string * string) list
     val sexp_of_t : t -> Sexplib0.Sexp.t
     val pp_hum : Format.formatter -> t -> unit [@@ocaml.toplevel_printer]
   end
@@ -144,6 +148,35 @@ module Rock : sig
       -> ?headers:Headers.t
       -> ?env:Hmap0.t
       -> Yojson.Safe.t
+      -> t
+
+    val get_header : t -> string -> string option
+    val get_headers : t -> string -> string list
+    val add_header : t -> string * string -> t
+    val add_header_unless_exists : t -> string * string -> t
+    val add_headers : t -> (string * string) list -> t
+    val add_headers_unless_exists : t -> (string * string) list -> t
+    val get_cookie : t -> string -> Cookie.t option
+    val get_cookies : t -> Cookie.t list
+
+    val add_cookie
+      :  ?expires:Cookie.expires
+      -> ?scope:Uri.t
+      -> ?same_site:Cookie.same_site
+      -> ?secure:bool
+      -> ?http_only:bool
+      -> t
+      -> string * string
+      -> t
+
+    val add_cookie_unless_exists
+      :  ?expires:Cookie.expires
+      -> ?scope:Uri.t
+      -> ?same_site:Cookie.same_site
+      -> ?secure:bool
+      -> ?http_only:bool
+      -> t
+      -> string * string
       -> t
 
     val sexp_of_t : t -> Sexplib0.Sexp.t
@@ -222,3 +255,7 @@ module Middleware : sig
     -> unit
     -> Rock.Middleware.t
 end
+
+module Cookie = Cookie
+module Date = Date
+module Session = Opium_session

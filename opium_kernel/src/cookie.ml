@@ -78,7 +78,7 @@ module Attribute_map = struct
   ;;
 end
 
-type header = Rock.Headers.name * Rock.Headers.value
+type header = Httpaf.Headers.name * Httpaf.Headers.value
 
 let header_of_string str =
   let len = String.length str in
@@ -277,13 +277,16 @@ let to_cookie_header ?now ?(elapsed = 0L) ?(scope = Uri.of_string "/") tl =
         |> String.concat "; " ))
 ;;
 
+let values_of_string s =
+  String.split_on_char ';' s
+  |> List.map (String.split_on_char '=')
+  |> List.filter_map (function
+         | [ key; value ] -> Some (String.trim key, String.trim value)
+         | _ -> None)
+;;
+
 let cookies_of_header (key, value) =
   match key with
-  | "Cookie" | "cookie" ->
-    String.split_on_char ';' value
-    |> List.map (String.split_on_char '=')
-    |> List.filter_map (function
-           | [ key; value ] -> Some (String.trim key, String.trim value)
-           | _ -> None)
+  | "Cookie" | "cookie" -> values_of_string value
   | _ -> []
 ;;
