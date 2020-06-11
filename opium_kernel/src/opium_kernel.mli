@@ -194,7 +194,7 @@ module Router : sig
   type 'action t
 
   val empty : 'action t
-  val add : 'a t -> route:Route.t -> meth:Method.t -> action:'a -> 'a t
+  val add : 'a t -> route:Route.t -> meth:Rock.Method.t -> action:'a -> 'a t
   val param : Rock.Request.t -> string -> string
   val splat : Rock.Request.t -> string list
   val m : Rock.Handler.t t -> Rock.Middleware.t
@@ -202,7 +202,7 @@ end
 
 module Server_connection : sig
   type error_handler =
-    Headers.t -> Httpaf.Server_connection.error -> (Headers.t * Body.t) Lwt.t
+    Headers.t -> Httpaf.Server_connection.error -> (Rock.Headers.t * Rock.Body.t) Lwt.t
 
   val run
     :  (request_handler:Httpaf.Server_connection.request_handler
@@ -215,17 +215,17 @@ end
 
 module Static : sig
   val serve
-    :  read:(unit -> Body.t option Lwt.t)
+    :  read:(unit -> Rock.Body.t option Lwt.t)
     -> ?mime_type:string
     -> ?etag_of_fname:(string -> string)
-    -> ?headers:Headers.t
+    -> ?headers:Rock.Headers.t
     -> string
     -> Rock.Handler.t
 
   val m
-    :  read:(string -> Body.t option Lwt.t)
+    :  read:(string -> Rock.Body.t option Lwt.t)
     -> ?uri_prefix:string
-    -> ?headers:Headers.t
+    -> ?headers:Rock.Headers.t
     -> ?etag_of_fname:(string -> string)
     -> unit
     -> Rock.Middleware.t
@@ -246,7 +246,7 @@ module Middleware : sig
     -> ?max_age:int
     -> ?headers:string list
     -> ?expose:string list
-    -> ?methods:Httpaf.Method.t list
+    -> ?methods:Rock.Method.t list
     -> ?send_preflight_response:bool
     -> unit
     -> Rock.Middleware.t
@@ -254,7 +254,7 @@ module Middleware : sig
   val static
     :  read:(string -> Rock.Body.t option Lwt.t)
     -> ?uri_prefix:string
-    -> ?headers:Httpaf.Headers.t
+    -> ?headers:Rock.Headers.t
     -> ?etag_of_fname:(string -> string)
     -> unit
     -> Rock.Middleware.t
