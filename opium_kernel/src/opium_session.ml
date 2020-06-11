@@ -208,3 +208,14 @@ module Memory = struct
 
   include Make (Backend)
 end
+
+module Cookie = struct
+  module Backend = struct
+    include Session.Lift.IO (Lwt) (Session_backend_cookie)
+  end
+
+  let create request = Session_backend_cookie.create request
+  let set_default_period = Session_backend_cookie.set_default_period
+
+  include Make (Backend)
+end
